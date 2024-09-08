@@ -40,6 +40,13 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             docker pull ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/jacquescredo
-            docker stop jacquescredo || true  # Arrêter le conteneur existant (si nécessaire)
-            docker rm jacquescredo || true   # Supprimer le conteneur existant (si nécessaire)
-            docker run -d --name jacquescredo -p 80:80 ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/jacquescredo
+            echo "Docker images pulled successfully."
+
+            if [ -d "/home/${{ secrets.SSH_USER }}/app" ]; then
+              rm -rf /home/${{ secrets.SSH_USER }}/app
+            fi
+            mkdir -p /home/${{ secrets.SSH_USER }}/app
+            echo "Directory created or recreated."
+           #docker stop jacquescredo || true  # Arrêter le conteneur existant (si nécessaire)
+           #docker rm jacquescredo || true   # Supprimer le conteneur existant (si nécessaire)
+           #docker run -d --name jacquescredo -p 80:80 ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/jacquescredo
