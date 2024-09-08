@@ -21,9 +21,9 @@ jobs:
         password: ${{ secrets.SCALEWAY_API_KEY }}
         registry: ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}
     - name: Build the Docker image
-      run: docker build . -t ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/jacquescredo
+      run: docker build . -t ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/jcredo
     - name: Push the Docker Image
-      run: docker push ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/jacquescredo
+      run: docker push ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/jcredo
 
 
 
@@ -39,14 +39,6 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            #docker pull ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/jacquescredo
-            #echo "Docker images pulled successfully."
-
-            #if [ -d "/home/${{ secrets.SSH_USER }}/app" ]; then
-            #  rm -rf /home/${{ secrets.SSH_USER }}/app
-            #fi
-            #mkdir -p /home/${{ secrets.SSH_USER }}/app
-            #echo "Directory created or recreated."
-            docker stop app || true  # Arrêter le conteneur existant (si nécessaire)
-            docker rm app || true   # Supprimer le conteneur existant (si nécessaire)
-            docker run -d --name app -p 80:80 ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/jacquescredo
+            docker stop jcredo || true  # Arrêter le conteneur existant (si nécessaire)
+            docker rm jcredo || true   # Supprimer le conteneur existant (si nécessaire)
+            docker run -d --name jcredo -p 8020:8020 ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/jacquescredo
