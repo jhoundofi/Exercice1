@@ -27,7 +27,7 @@ jobs:
 
 
 
-name: Docker Image CI and Deploy
+name: Docker Image Deploy
 
 on:
   push:
