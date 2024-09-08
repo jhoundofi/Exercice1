@@ -24,3 +24,18 @@ jobs:
       run: docker build . -t ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/jacquescredo
     - name: Push the Docker Image
       run: docker push ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/jacquescredo
+
+
+
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to instance
+        run: |
+          ssh root@163.172.159.32 "
+            docker pull ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/jacquescredo
+            docker run -d -p 80:80 ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/jacquescredo
+          "
