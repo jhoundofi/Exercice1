@@ -22,4 +22,4 @@ COPY . .
 EXPOSE 8020
 
 # Commande pour démarrer l'application
-CMD ["uvicorn", "app:app",  "--port", "8000", "--host", "0.0.0.0" ]
+CMD ["uvicorn", "app:app",  "--port", "8020", "--host", "0.0.0.0" ]
