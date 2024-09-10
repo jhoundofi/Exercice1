@@ -5,57 +5,67 @@ on:
       - main
 
 jobs:
-  build-delano-backend:
+  build-credo-backend:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Login to Scaleway Container Registry
-      uses: docker/login-action@v3
-      with:
-        username: nologin
-        password: ${{ secrets.SCALEWAY_API_KEY }}
-        registry: ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}
-    - name: Build the backend Docker image
-      run: docker build ./backend -t ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/delano-backend:latest
-    - name: Push the backend Docker Image
-      run: docker push ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/delano-backend:latest
-  
-  build-delano-frontend:
+      - uses: actions/checkout@v4
+      - name: Login to Scaleway Container Registry
+        uses: docker/login-action@v3
+        with:
+          username: nologin
+          password: ${{ secrets.SCALEWAY_API_KEY }}
+          registry: ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}
+      - name: Build the backend Docker image
+        run: docker build ./backend -t ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/credo-backend:latest
+      - name: Push the backend Docker Image
+        run: docker push ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/credo-backend:latest
+
+  build-credo-frontend:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Login to Scaleway Container Registry
-      uses: docker/login-action@v3
-      with:
-        username: nologin
-        password: ${{ secrets.SCALEWAY_API_KEY }}
-        registry: ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}
-    - name: Build the frontend Docker image
-      run: docker build ./frontend -t ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/delano-frontend:latest
-    - name: Push the frontend Docker Image
-      run: docker push ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/delano-frontend:latest
-      
+      - uses: actions/checkout@v4
+      - name: Login to Scaleway Container Registry
+        uses: docker/login-action@v3
+        with:
+          username: nologin
+          password: ${{ secrets.SCALEWAY_API_KEY }}
+          registry: ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}
+      - name: Build the frontend Docker image
+        run: docker build ./frontend -t ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/credo-frontend:latest
+      - name: Push the frontend Docker Image
+        run: docker push ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/credo-frontend:latest
+
   deploy:
     runs-on: ubuntu-latest
-    needs: [build-delano-backend, build-delano-frontend]
+    needs: [build-credo-backend, build-credo-frontend]
     steps:
+      - uses: actions/checkout@v4
+      - name: Upload docker-compose.yml
+        run: |
+          scp -o StrictHostKeyChecking=no -i ${{ secrets.SSH_PRIVATE_KEY }} docker-compose.yml ${{ secrets.SSH_USER }}@${{ secrets.HOST }}:~/credo
       - name: Deploy app to instance
-        uses: appleboy/ssh-action@master  
+        uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.HOST }}           # Adresse du serveur SSH
-          username: ${{ secrets.SSH_USER }}   # Nom d’utilisateur pour se connecter au serveur SSH
-          key: ${{ secrets.SSH_PRIVATE_KEY }} # Clé privée SSH pour l’authentification
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            cd ./delano
-            # Arrêter et supprimer les conteneurs existants (si nécessaire)
-            docker-compose down . || true
-            docker-compose rm . || true
+            cd ~/credo
+            # Vérifier si docker-compose est installé
+            if ! command -v docker-compose &> /dev/null; then
+              echo "docker-compose n'est pas installé. Installation en cours..."
+              sudo curl -L https://github.com/docker/compose/releases/latest/download/linux/x86_64/docker-compose -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local.bin/docker-compose
+            fi
 
-            # Récupérer la dernière version des images depuis le registre
-            docker pull ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/delano-backend:latest #|| exit 1
-            docker pull ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/delano-frontend:latest #|| exit 1
-                
-            # Lancer les nouveaux conteneurs a partir du dcoker-compose
-            # docker-compose up -d --name delano-app-test -p 8033:8033 ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/delano-app-test:latest
-            docker-compose up -d #--name delano-app-test -p 8033:8033 ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/delano-app-test:latest
+            # Arrêter et supprimer les conteneurs existants si nécessaire
+            docker-compose down
+            docker-compose rm -f
+
+            # Tirer les dernières images
+            docker pull ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/credo-backend:latest
+            docker pull ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/credo-frontend:latest
+
+            # Lancer les nouveaux conteneurs
+            docker-compose up -d

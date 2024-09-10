@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: backend  # Nom du conteneur
     ports:
-      - "8080:8050"
+      - "8007:8007"
     restart: always
 
   frontend:
@@ -14,7 +14,7 @@ services:
       dockerfile: Dockerfile
     container_name: frontend
     ports: 
-      - "8081:8051"
+      - "8001:8001"
     depends_on:
       - backend
     restart: always
