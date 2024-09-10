@@ -1,17 +1,20 @@
-#-*version: '3'
 services:
   backend:
-    image: "${CONTAINER_REGISTRY_ENDPOINT}/image1-backend:${TAG:-latest}"
-    container_name: backend
+    build: 
+      context: rg.fr-par.scw.cloud/atut-group-2/backend
+      dockerfile: Dockerfile
+    container_name: backend  # Nom du conteneur
     ports:
-      - "8007:8007"
+      - "8080:8050"
     restart: always
 
   frontend:
-    image: "${CONTAINER_REGISTRY_ENDPOINT}/image1-frontend:${TAG:-latest}"
+    build:
+      context: rg.fr-par.scw.cloud/atut-group-2/frontend
+      dockerfile: Dockerfile
     container_name: frontend
-    ports:
-      - "8001:8001"
-    depends_on: 
-      - backend 
+    ports: 
+      - "8081:8051"
+    depends_on:
+      - backend
     restart: always
