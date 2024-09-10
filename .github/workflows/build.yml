@@ -33,5 +33,5 @@ jobs:
         run: docker push ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/image1-backend:latest
 
 
-- name: Build the Docker image
-      run: docker build . -t ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/groupe-2
+#- name: Build the Docker image
+ #     run: docker build . -t ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/groupe-2
