@@ -21,12 +21,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install docker-compose -y
 
-      - name: Build and tag the backend Docker image
-        run: docker-compose build backend && docker tag backend ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/image1-backend:${{ github.sha }}
+      - name: Build the backend Docker image
+        run: |
+          docker-compose build backend
+          docker images  # List images to confirm build success
 
-      # List Docker images to verify the build
-      - name: List Docker images
-        run: docker images
+      - name: Tag the backend Docker image
+        run: docker tag backend:latest ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/image1-backend:${{ github.sha }}
 
       - name: Push the backend Docker image
         run: docker push ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/image1-backend:${{ github.sha }}
