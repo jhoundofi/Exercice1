@@ -9,7 +9,6 @@ on:
       - "main"
 
 jobs:
-  # Job pour construire et pousser les images vers Scaleway Container Registry
   build:
     runs-on: ubuntu-latest
     steps:
@@ -47,22 +46,19 @@ jobs:
       - name: Push the frontend Docker image
         run: docker push ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/image1-frontend:${{ github.sha }}
 
-  # Job pour déployer les images sur le serveur de production
   deploy:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # Étape pour se connecter au serveur via SSH
       - name: Deploy to server
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-        env:
-          CONTAINER_REGISTRY_ENDPOINT: ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}
-          TAG: ${{ github.sha }}
-        run: |
-          cd /home/root/  # Remplacez par le bon chemin
-          docker-compose down || true
-          docker-compose pull  # Tire les dernières images depuis le registre
-          docker-compose up -d  # Redémarre les conteneurs avec les nouvelles images
+          script: |
+            cd /home/root/  # Remplacez par le bon chemin
+            docker-compose down || true
+            docker-compose pull  # Tire les dernières images depuis le registre
+            docker-compose up -d  # Redémarre les conteneurs avec les nouvelles images
