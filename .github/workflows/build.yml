@@ -27,7 +27,7 @@ jobs:
           docker images  # List images to confirm build success
 
       - name: Tag the backend Docker image
-        run: docker tag backend:latest ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/image1-backend:${{ github.sha }}
+        run: docker tag backend:latest ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/image1-backend:latest
 
       - name: Push the backend Docker image
-        run: docker push ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/image1-backend:${{ github.sha }}
+        run: docker push ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/image1-backend:latest
