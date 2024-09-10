@@ -1,17 +1,14 @@
+#-*version: '3'
 services:
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: "${CONTAINER_REGISTRY_ENDPOINT}/image1-backend:${TAG:-latest}"
     container_name: backend
     ports:
       - "8007:8007"
     restart: always
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: "${CONTAINER_REGISTRY_ENDPOINT}/image1-frontend:${TAG:-latest}"
     container_name: frontend
     ports:
       - "8001:8001"
