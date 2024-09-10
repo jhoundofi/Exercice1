@@ -2,17 +2,22 @@ name: Docker Image CI and Deploy
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - "main"
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - "main"
 
 jobs:
-  build-backend:
+  # Job pour construire et pousser les images vers Scaleway Container Registry
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      # Étape 1: Récupérer le code source
+      - name: Checkout the code
         uses: actions/checkout@v4
 
+      # Étape 2: Installer Docker et docker-compose
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
 
@@ -21,17 +26,49 @@ jobs:
           sudo apt-get update
           sudo apt-get install docker-compose -y
 
-      - name: Build the backend Docker image
+      # Étape 3: Se connecter au registre Scaleway Container Registry
+      - name: Login to Scaleway Container Registry
+        uses: docker/login-action@v3
+        with:
+          username: nologin
+          password: ${{ secrets.SCALEWAY_API_KEY }}
+          registry: ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}
+
+      # Étape 4: Construire et taguer les images Docker pour backend et frontend
+      - name: Build and tag the backend Docker image
         run: |
           docker-compose build backend
-          docker images  # List images to confirm build success
+          docker tag backend ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/image1-backend:${{ github.sha }}
 
-      - name: Tag the backend Docker image
-        run: docker tag backend:latest ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/image1-backend:latest
+      - name: Build and tag the frontend Docker image
+        run: |
+          docker-compose build frontend
+          docker tag frontend ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/image1-frontend:${{ github.sha }}
 
+      # Étape 5: Pousser les images Docker vers le registre Scaleway
       - name: Push the backend Docker image
-        run: docker push ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/image1-backend:latest
+        run: docker push ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/image1-backend:${{ github.sha }}
 
+      - name: Push the frontend Docker image
+        run: docker push ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/image1-frontend:${{ github.sha }}
 
-#- name: Build the Docker image
- #     run: docker build . -t ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}/groupe-2
+  # Job pour déployer les images sur le serveur de production
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # Étape 1: Déployer sur le serveur via SSH
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          env:
+            CONTAINER_REGISTRY_ENDPOINT: ${{ secrets.CONTAINER_REGISTRY_ENDPOINT }}
+            TAG: ${{ github.sha }}
+          script: |
+            cd /home/root/  # Remplacez par le bon chemin
+            docker-compose down || true
+            docker-compose pull  # Tire les dernières images depuis le registre
+            docker-compose up -d  # Redémarre les conteneurs avec les nouvelles images
